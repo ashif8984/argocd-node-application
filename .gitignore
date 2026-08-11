@@ -1,0 +1,44 @@
+# Node.js dependencies
+node_modules/
+
+# Environment variables
+.env
+
+# Package lock files
+package-lock.json
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+*.log
+
+# Runtime files
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# MacOS files
+.DS_Store
+
+# Generated files
+dist/
+build/
+
+# Argo CD and Kubernetes temporary files
+*.local
+
+# Docker files
+docker-compose.override.yml
+
+# Misc
+coverage/
+argocdinstall.sh
