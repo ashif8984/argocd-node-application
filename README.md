@@ -1,0 +1,1 @@
+# argocd-node-application
