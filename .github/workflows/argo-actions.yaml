@@ -71,7 +71,11 @@ jobs:
                 argocd login ${{ secrets.ARGOCD_SERVER }} \
                     --username ${{ secrets.ARGOCD_USERNAME }} \
                     --password ${{ secrets.ARGOCD_PASSWORD }} \
+                    --grpc-web \
                     --insecure
+
+
+
             - name: Update deployment.yaml with newly built image
               run: |
                 git config user.name "${{ secrets.GIT_USERNAME }}"
