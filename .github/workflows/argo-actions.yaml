@@ -67,13 +67,7 @@ jobs:
                   sudo mv argocd /usr/local/bin/argocd
                   
             - name: Login to ArgoCD
-              run: |
-                argocd login localhost:8080 \
-                    --insecure  \
-                    --grpc-web \
-                    --username admin \
-                    --password  ${{ secrets.ARGOCD_PASSWORD }}
-
+              run: argocd login ${{ secrets.ARGOCD_SERVER }} --username ${{ secrets.ARGOCD_USERNAME }} --password ${{ secrets.ARGOCD_PASSWORD }} --insecure --grpc-web
 
             - name: Update deployment.yaml with newly built image
               run: |
