@@ -68,6 +68,11 @@ jobs:
                   
             - name: Login to ArgoCD
               run: argocd login ${{ secrets.ARGOCD_SERVER }} --username ${{ secrets.ARGOCD_USERNAME }} --password ${{ secrets.ARGOCD_PASSWORD }} --insecure --grpc-web
+              env:
+                HTTP_PROXY: ""
+                HTTPS_PROXY: ""
+                http_proxy: ""
+                https_proxy: ""
 
             - name: Update deployment.yaml with newly built image
               run: |
