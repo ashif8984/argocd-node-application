@@ -66,6 +66,22 @@ jobs:
 
             - run: argocd version --client
 
+            - name: List applications
+              id: argocd
+              uses: clowdhaus/argo-cd-action/@main
+              env:
+                GITHUB_TOKEN: ${{ secrets.REPOSITORY_ACCESS_TOKEN }}
+              with:
+                command: app list
+                options: >-
+                  --auth-token ${{ secrets.ARGOCD_PASSWORD }}
+                  --server ${{ secrets.ARGOCD_SERVER }}
+                  --grpc-web
+                  -o name
+
+            - name: Use output
+              run: echo "${{ steps.argocd.outputs.output }}"
+
 
             # - name: Install ArgoCD CLI
             #   run: | 
