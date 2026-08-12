@@ -1,9 +1,20 @@
 name: Node Application Gitops pipeline with Argocd
-
 on:
   push:
-      branches:
-            - main
+    branches:
+      - main
+
+    paths:
+      - 'index.js'         # Only build docker image when app code changes
+      - 'package*.json'
+      - 'Dockerfile'
+    # paths-ignore:
+    #   - 'manifest/**'  # Pushes to manifest/ will NOT trigger the Docker build workflow
+
+# on:
+#   push:
+#       branches:
+#             - main
 env:
   REPOSITORY_ACCESS_TOKEN: ${{ secrets.REPOSITORY_ACCESS_TOKEN }}
   DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -45,7 +56,7 @@ jobs:
               run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/my-app:${{ github.sha }}
 
     deploy:
-        needs: build
+        needs: build  
         runs-on: self-hosted
         steps: 
             - name: Checkout code
@@ -71,14 +82,6 @@ jobs:
                 
                 # Verify installation
                 argocd version --client
-
-
-
-            # - name: Install ArgoCD CLI
-            #   run: | 
-            #       curl -sSL -o argocd https://github.com/argoproj/argo-cd/releases/tag/v3.5.0
-            #       chmod +x argocd
-            #       sudo mv argocd /usr/local/bin/argocd
                   
             - name: Login to ArgoCD
               run: argocd login ${{ secrets.ARGOCD_SERVER }} --username ${{ secrets.ARGOCD_USERNAME }} --password ${{ secrets.ARGOCD_PASSWORD }} --insecure --grpc-web
