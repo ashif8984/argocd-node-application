@@ -59,12 +59,26 @@ jobs:
                   curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.30.7/2024-12-12/bin/linux/amd64/kubectl
                   chmod +x ./kubectl
                   sudo mv ./kubectl /usr/local/bin/kubectl
+            
+            - name: Install Argo CD CLI
+              run: |
+                # Fetch the latest stable release tag
+                ARGOCD_VERSION=$(curl -sSL https://api.github.com/repos/argoproj/argo-cd/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+                
+                # Download binary with -f to fail on HTTP errors
+                sudo curl -sSL -f -o /usr/local/bin/argocd "https://github.com/argoproj/argo-cd/releases/download/${ARGOCD_VERSION}/argocd-linux-amd64"
+                sudo chmod +x /usr/local/bin/argocd
+                
+                # Verify installation
+                argocd version --client
 
-            - name: Install ArgoCD CLI
-              run: | 
-                  curl -sSL -o argocd https://github.com/argoproj/argo-cd/releases/tag/v3.5.0
-                  chmod +x argocd
-                  sudo mv argocd /usr/local/bin/argocd
+
+
+            # - name: Install ArgoCD CLI
+            #   run: | 
+            #       curl -sSL -o argocd https://github.com/argoproj/argo-cd/releases/tag/v3.5.0
+            #       chmod +x argocd
+            #       sudo mv argocd /usr/local/bin/argocd
                   
             - name: Login to ArgoCD
               run: argocd login ${{ secrets.ARGOCD_SERVER }} --username ${{ secrets.ARGOCD_USERNAME }} --password ${{ secrets.ARGOCD_PASSWORD }} --insecure --grpc-web
