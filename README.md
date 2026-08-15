@@ -207,6 +207,115 @@ Log in with:
 - Username: `admin`
 - Password: retrieved from the secret generated during installation
 
+## ✅ Local Quick Setup Guide
+
+Use the following workflow to run this project locally on Minikube and validate the GitOps pipeline end to end.
+
+### 1. Start a Minikube cluster
+
+```bash
+minikube start
+minikube status
+```
+
+This creates a local Kubernetes cluster for running the application and the GitHub self-hosted runner.
+
+### 2. Create a self-hosted runner using the setup script
+
+```bash
+chmod +x setup-runner.sh
+./setup-runner.sh
+```
+
+When prompted:
+
+- enter your GitHub Personal Access Token
+- confirm the repository name or accept the default value
+
+The script installs cert-manager, adds the actions-runner-controller Helm repository, deploys the runner controller, and creates a self-hosted runner for the repository.
+
+### 3. Create the Argo CD server using the setup script
+
+```bash
+chmod +x setup-argocd.sh
+./setup-argocd.sh
+```
+
+This script installs Argo CD into the `argocd` namespace and prints the initial admin credentials.
+
+### 4. Run the Argo CD server using port-forward
+
+```bash
+kubectl port-forward svc/argocd-server -n argocd 8080:443
+```
+
+Then open:
+
+```text
+https://localhost:8080
+```
+
+### 5. Fetch the Argo CD username and password
+
+```bash
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+```
+
+Use:
+
+- Username: `admin`
+- Password: the value printed by the command above
+
+### 6. Connect the GitHub repository in Argo CD
+
+Inside the Argo CD UI:
+
+1. Go to `Settings`
+2. Select `Repositories`
+3. Click `Connect Repo`
+4. Add your GitHub repository URL and authentication details
+
+This allows Argo CD to monitor the repository and deploy the application.
+
+### 7. Create an application in Argo CD
+
+You can either create the app from the UI or using the CLI.
+
+Example CLI pattern:
+
+```bash
+argocd app create my-app \
+  --repo https://github.com/<your-user>/<your-repo>.git \
+  --path . \
+  --dest-server https://kubernetes.default.svc \
+  --dest-namespace argocd
+```
+
+If using the UI, create a new app and point it to the GitHub repository and the target cluster/namespace.
+
+### 8. Make a small change in the app and let the CI/CD run
+
+Edit [index.js](index.js) and change something simple, such as the page title or displayed text.
+
+Then push the changes to the `main` branch. GitHub Actions will:
+
+- build the Docker image
+- push it to Docker Hub
+- update the deployment manifest
+- trigger Argo CD sync
+
+### 9. Start the application using Minikube service
+
+Once the service is created, expose it locally with:
+
+```bash
+minikube service my-service -n argocd
+```
+
+This opens the service URL in the browser and lets you verify the application is running.
+
+> If your service is created in a different namespace, update the namespace in the command accordingly.
+
 ## GitHub Actions CI/CD Flow
 
 The GitHub Actions workflow is defined in [.github/workflows/argo-actions.yaml](.github/workflows/argo-actions.yaml).
