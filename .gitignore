@@ -42,3 +42,7 @@ docker-compose.override.yml
 # Misc
 coverage/
 argocdinstall.sh
+
+
+
+README.md
