@@ -10,16 +10,16 @@ app.get('/', (req, res) => {
             <meta charset="UTF-8">
             <title>Express HTML Demo</title>
             <style>
-                body { background-color: #a076f5; font-family: sans-serif; text-align: center; margin-top: 50px; }
+                body { background-color: #53c238; font-family: sans-serif; text-align: center; margin-top: 50px; }
                 h1 { color: #333; }
-                h2 { color: #e81212; }
-                p { color: #666; }
+                h2 { color: #030a04; }
+                p { color: #330303; }
             </style>
         </head>
         <body>
             <h1>Hello from Express!</h1>
-            <h2>My Name is Aisha Ashif Eqbal</h2>
-            <p>This page is rendered directly using HTML tags inside Express.</p>
+            <h2>Welcome to the Express HTML Demo</h2>
+            <p>This web application is deployed using Kubernetes and Argocd</p>
         </body>
         </html>
     `);
