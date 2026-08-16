@@ -15,6 +15,12 @@ on:
 #   push:
 #       branches:
 #             - main
+
+concurrency:
+  group: node-app-main
+  cancel-in-progress: false
+
+
 env:
   REPOSITORY_ACCESS_TOKEN: ${{ secrets.REPOSITORY_ACCESS_TOKEN }}
   DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -36,18 +42,36 @@ jobs:
                fetch-depth: 0
                
             - name: Set up Node.js
-              uses: actions/setup-node@v3
+              # uses: actions/setup-node@v3
+              uses: actions/setup-node@v4
               with:
-                  node-version: '14'
+                  # node-version: '14'
+                  node-version: "22"
                   
             - name: Install Node.js dependencies
-              run: npm install
+              # run: npm install
+              run: npm ci
+
+            - name: Run tests
+              run: npm test
               
             - name: Build Docker image
               run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/my-app:${{ github.sha}} .
 
+            # - name: Scan Docker Image with Trivy
+            #   run: docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image ${{ secrets.DOCKERHUB_USERNAME }}/my-app:${{ github.sha }}
+
             - name: Scan Docker Image with Trivy
-              run: docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image ${{ secrets.DOCKERHUB_USERNAME }}/my-app:${{ github.sha }}
+              uses: aquasecurity/trivy-action@master
+              with:
+                image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/my-app:${{ github.sha }}
+                format: table
+                exit-code: 1
+                ignore-unfixed: true
+                vuln-type: os,library
+                severity: HIGH,CRITICAL
+
+
 
             - name: Log in to DockerHub
               run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
@@ -71,20 +95,20 @@ jobs:
                   chmod +x ./kubectl
                   sudo mv ./kubectl /usr/local/bin/kubectl
             
-            - name: Install Argo CD CLI
-              run: |
-                # Fetch the latest stable release tag
-                ARGOCD_VERSION=$(curl -sSL https://api.github.com/repos/argoproj/argo-cd/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+            # - name: Install Argo CD CLI
+            #   run: |
+            #     # Fetch the latest stable release tag
+            #     ARGOCD_VERSION=$(curl -sSL https://api.github.com/repos/argoproj/argo-cd/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
                 
-                # Download binary with -f to fail on HTTP errors
-                sudo curl -sSL -f -o /usr/local/bin/argocd "https://github.com/argoproj/argo-cd/releases/download/${ARGOCD_VERSION}/argocd-linux-amd64"
-                sudo chmod +x /usr/local/bin/argocd
+            #     # Download binary with -f to fail on HTTP errors
+            #     sudo curl -sSL -f -o /usr/local/bin/argocd "https://github.com/argoproj/argo-cd/releases/download/${ARGOCD_VERSION}/argocd-linux-amd64"
+            #     sudo chmod +x /usr/local/bin/argocd
                 
-                # Verify installation
-                argocd version --client
+            #     # Verify installation
+            #     argocd version --client
                   
-            - name: Login to ArgoCD
-              run: argocd login ${{ secrets.ARGOCD_SERVER }} --username ${{ secrets.ARGOCD_USERNAME }} --password ${{ secrets.ARGOCD_PASSWORD }} --insecure --grpc-web
+            # - name: Login to ArgoCD
+            #   run: argocd login ${{ secrets.ARGOCD_SERVER }} --username ${{ secrets.ARGOCD_USERNAME }} --password ${{ secrets.ARGOCD_PASSWORD }} --insecure --grpc-web
 
 
             - name: Update deployment.yaml with newly built image
@@ -112,5 +136,5 @@ jobs:
                 git commit -m "Update image to my-app:${{ github.sha }}"
                 git push origin main
 
-            - name: Refresh ArgoCD App and Sync
-              run: argocd app sync my-app
+            # - name: Refresh ArgoCD App and Sync
+            #   run: argocd app sync argocd-node-app
