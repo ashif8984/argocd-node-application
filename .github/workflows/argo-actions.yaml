@@ -58,18 +58,18 @@ jobs:
             - name: Build Docker image
               run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/my-app:${{ github.sha}} .
 
-            # - name: Scan Docker Image with Trivy
-            #   run: docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image ${{ secrets.DOCKERHUB_USERNAME }}/my-app:${{ github.sha }}
-
             - name: Scan Docker Image with Trivy
-              uses: aquasecurity/trivy-action@master
-              with:
-                image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/my-app:${{ github.sha }}
-                format: table
-                exit-code: 1
-                ignore-unfixed: true
-                vuln-type: os,library
-                severity: HIGH,CRITICAL
+              run: docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image ${{ secrets.DOCKERHUB_USERNAME }}/my-app:${{ github.sha }}
+
+            # - name: Scan Docker Image with Trivy
+            #   uses: aquasecurity/trivy-action@master
+            #   with:
+            #     image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/my-app:${{ github.sha }}
+            #     format: table
+            #     exit-code: 1
+            #     ignore-unfixed: true
+            #     vuln-type: os,library
+            #     severity: HIGH,CRITICAL
 
 
 
