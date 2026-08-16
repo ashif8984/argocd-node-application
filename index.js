@@ -17,7 +17,7 @@ app.get('/', (req, res) => {
             </style>
         </head>
         <body>
-            <h1>Hello from .. Vande Bharat!</h1>
+            <h1>Hello from ..... Vande Bharat!</h1>
             <h2>Welcome to the Indian Railway</h2>
             <p>This web application is deployed using Kubernetes and Argocd</p>
         </body>

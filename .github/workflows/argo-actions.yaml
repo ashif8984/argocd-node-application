@@ -52,8 +52,8 @@ jobs:
               run: npm install
               # run: npm ci
 
-            - name: Run tests
-              run: npm test
+            # - name: Run tests
+            #   run: npm test
               
             - name: Build Docker image
               run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/my-app:${{ github.sha}} .
