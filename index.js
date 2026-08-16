@@ -10,7 +10,7 @@ app.get('/', (req, res) => {
             <meta charset="UTF-8">
             <title>Express HTML Demo</title>
             <style>
-                body { background-color: #53c238; font-family: sans-serif; text-align: center; margin-top: 50px; }
+                body { background-color: #c23838; font-family: sans-serif; text-align: center; margin-top: 50px; }
                 h1 { color: #333; }
                 h2 { color: #030a04; }
                 p { color: #330303; }

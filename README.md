@@ -368,7 +368,27 @@ If you leave it blank, the script will default to:
 ```text
 ashif8984/argocd-node-application
 ```
+## Connecting repository and creating application
 
+```
+# Login to Argocd server
+argocd login localhost:8080 --name local
+
+# Adding repository
+argocd repo add https://github.com/ashif8984/argocd-node-application.git
+
+# Creating application
+argocd app create  argocd-node-app \
+    --repo https://github.com/ashif8984/argocd-node-application.git \
+    --path manifest \
+    --dest-server https://kubernetes.default.svc \
+    --dest-namespace default \
+    --revision main \
+    --sync-policy automated \
+    --dest-namespace argocd \
+    --auto-prune \
+    --self-heal
+```
 ## Required GitHub Secrets
 
 Add the following secrets in your GitHub repository settings:
