@@ -5,21 +5,13 @@ on:
       - main
 
     paths:
-      - 'index.js'         # Only build docker image when app code changes
-      - 'package*.json'
-      - 'Dockerfile'
-    # paths-ignore:
-    #   - 'manifest/**'  # Pushes to manifest/ will NOT trigger the Docker build workflow
-
-# on:
-#   push:
-#       branches:
-#             - main
+      - "index.js" # Only build docker image when app code changes
+      - "package*.json"
+      - "Dockerfile"
 
 concurrency:
   group: node-app-main
   cancel-in-progress: false
-
 
 env:
   REPOSITORY_ACCESS_TOKEN: ${{ secrets.REPOSITORY_ACCESS_TOKEN }}
@@ -30,111 +22,74 @@ env:
   ARGOCD_SERVER: ${{ secrets.ARGOCD_SERVER }}
   GIT_EMAIL: ${{ secrets.GIT_EMAIL }}
   GIT_USERNAME: ${{ secrets.GIT_USERNAME }}
-  
+
 jobs:
-    build:
-        runs-on: ubuntu-latest
-        steps:
-            - name: checkout code
-              uses: actions/checkout@v3
-              with:
-               token: ${{ secrets.REPOSITORY_ACCESS_TOKEN }}
-               fetch-depth: 0
-               
-            - name: Set up Node.js
-              # uses: actions/setup-node@v3
-              uses: actions/setup-node@v4
-              with:
-                  # node-version: '14'
-                  node-version: "22"
-                  
-            - name: Install Node.js dependencies
-              run: npm install
-              # run: npm ci
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.REPOSITORY_ACCESS_TOKEN }}
+          fetch-depth: 0
 
-            # - name: Run tests
-            #   run: npm test
-              
-            - name: Build Docker image
-              run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/my-app:${{ github.sha}} .
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
 
-            - name: Scan Docker Image with Trivy
-              run: docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image ${{ secrets.DOCKERHUB_USERNAME }}/my-app:${{ github.sha }}
+      - name: Install Node.js dependencies
+        run: npm install
 
-            # - name: Scan Docker Image with Trivy
-            #   uses: aquasecurity/trivy-action@master
-            #   with:
-            #     image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/my-app:${{ github.sha }}
-            #     format: table
-            #     exit-code: 1
-            #     ignore-unfixed: true
-            #     vuln-type: os,library
-            #     severity: HIGH,CRITICAL
+      - name: Build Docker image
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/my-app:${{ github.sha}} .
 
+      - name: Scan Docker Image with Trivy
+        run: docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image ${{ secrets.DOCKERHUB_USERNAME }}/my-app:${{ github.sha }}
 
+      - name: Log in to DockerHub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
-            - name: Log in to DockerHub
-              run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-              
-            - name: Push Docker image to DockerHub
-              run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/my-app:${{ github.sha }}
+      - name: Push Docker image to DockerHub
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/my-app:${{ github.sha }}
 
-    deploy:
-        needs: build  
-        runs-on: self-hosted
-        steps: 
-            - name: Checkout code
-              uses: actions/checkout@v3
-              with:
-                token: ${{ secrets.REPOSITORY_ACCESS_TOKEN }}
-                fetch-depth: 0  # get all history of all branches and tags
+  deploy:
+    needs: build
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.REPOSITORY_ACCESS_TOKEN }}
+          fetch-depth: 0 # get all history of all branches and tags
 
-            - name: Install kubectl
-              run: |
-                  curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.30.7/2024-12-12/bin/linux/amd64/kubectl
-                  chmod +x ./kubectl
-                  sudo mv ./kubectl /usr/local/bin/kubectl
-            
-            # - name: Install Argo CD CLI
-            #   run: |
-            #     # Fetch the latest stable release tag
-            #     ARGOCD_VERSION=$(curl -sSL https://api.github.com/repos/argoproj/argo-cd/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-                
-            #     # Download binary with -f to fail on HTTP errors
-            #     sudo curl -sSL -f -o /usr/local/bin/argocd "https://github.com/argoproj/argo-cd/releases/download/${ARGOCD_VERSION}/argocd-linux-amd64"
-            #     sudo chmod +x /usr/local/bin/argocd
-                
-            #     # Verify installation
-            #     argocd version --client
-                  
-            # - name: Login to ArgoCD
-            #   run: argocd login ${{ secrets.ARGOCD_SERVER }} --username ${{ secrets.ARGOCD_USERNAME }} --password ${{ secrets.ARGOCD_PASSWORD }} --insecure --grpc-web
+      - name: Install kubectl
+        run: |
+          curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.30.7/2024-12-12/bin/linux/amd64/kubectl
+          chmod +x ./kubectl
+          sudo mv ./kubectl /usr/local/bin/kubectl
 
+      - name: Update deployment.yaml with newly built image
+        run: |
+          git config user.name "${{ secrets.GIT_USERNAME }}"
+          git config user.email "${{ secrets.GIT_EMAIL }}"
+          git fetch origin
+          git checkout main
+          git pull origin main
+          pwd
+          cat manifest/deployment.yaml
+          pwd
+          sed -i "s+${{ secrets.DOCKERHUB_USERNAME }}/my-app.*+${{ secrets.DOCKERHUB_USERNAME }}/my-app:${{ github.sha }}+g" manifest/deployment.yaml
+          cat manifest/deployment.yaml
 
-            - name: Update deployment.yaml with newly built image
-              run: |
-                git config user.name "${{ secrets.GIT_USERNAME }}"
-                git config user.email "${{ secrets.GIT_EMAIL }}"
-                git fetch origin
-                git checkout main
-                git pull origin main
-                pwd
-                cat manifest/deployment.yaml
-                pwd
-                sed -i "s+${{ secrets.DOCKERHUB_USERNAME }}/my-app.*+${{ secrets.DOCKERHUB_USERNAME }}/my-app:${{ github.sha }}+g" manifest/deployment.yaml
-                cat manifest/deployment.yaml
-
-            - name: Commit and Push Updated deployment.yaml
-              run: |
-                git config user.name "${{ secrets.GIT_USERNAME }}"
-                git config user.email "${{ secrets.GIT_EMAIL }}"
-                git remote set-url origin https://$GIT_USERNAME:$REPOSITORY_ACCESS_TOKEN@github.com/${{ github.repository }}.git
-                git fetch origin
-                git checkout main
-                git pull origin main
-                git add .
-                git commit -m "Update image to my-app:${{ github.sha }}"
-                git push origin main
-
-            # - name: Refresh ArgoCD App and Sync
-            #   run: argocd app sync argocd-node-app
+      - name: Commit and Push Updated deployment.yaml
+        run: |
+          git config user.name "${{ secrets.GIT_USERNAME }}"
+          git config user.email "${{ secrets.GIT_EMAIL }}"
+          git remote set-url origin https://$GIT_USERNAME:$REPOSITORY_ACCESS_TOKEN@github.com/${{ github.repository }}.git
+          git fetch origin
+          git checkout main
+          git pull origin main
+          git add .
+          git commit -m "Update image to my-app:${{ github.sha }}"
+          git push origin main
