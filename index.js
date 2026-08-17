@@ -29,6 +29,15 @@ app.get('/health', (req, res) => {
     res.status(200).send('OK');
 });
 
+app.get('/about', (req, res) => {
+    res.json({
+        name: "gitops-nodejs-app",
+        version: "1.0.0",
+        description: "Node.js app deployed with GitHub Actions and ArgoCD",
+        deployment: "Kubernetes with ArgoCD"
+    });
+});
+
 app.listen(port, () => {
   console.log(`App running on http://localhost:${port}`);
 });
