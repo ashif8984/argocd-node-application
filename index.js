@@ -31,7 +31,7 @@ app.get('/health', (req, res) => {
 
 app.get('/about', (req, res) => {
     res.json({
-        name: "gitops---nodejs-app",
+        name: "gitops-----nodejs-app",
         version: "1.0.0",
         description: "Node.js app deployed with GitHub Actions and ArgoCD",
         deployment: "Kubernetes with ArgoCD"
