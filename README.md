@@ -277,11 +277,7 @@ Inside the Argo CD UI:
 
 This allows Argo CD to monitor the repository and deploy the application.
 
-### 7. Create an application in Argo CD
-
-You can either create the app from the UI or using the CLI.
-
-Example CLI pattern:
+or
 
 ```bash
 # Login to Argocd server
@@ -290,6 +286,15 @@ argocd login localhost:8080 --name local
 # Adding repository
 argocd repo add https://github.com/ashif8984/argocd-node-application.git
 
+```
+
+### 7. Create an application in Argo CD
+
+You can either create the app from the UI or using the CLI.
+
+Example CLI pattern:
+
+```bash
 # Create an app
 argocd app create  argocd-node-app \
     --repo https://github.com/ashif8984/argocd-node-application.git \
