@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+const { exec } = require('child_process'); // for Sast scnning
 const port = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
@@ -36,6 +37,24 @@ app.get('/about', (req, res) => {
         description: "Node.js app deployed with GitHub Actions and ArgoCD",
         deployment: "Kubernetes with ArgoCD"
     });
+});
+
+// SAST scanning endpoint
+// High Severity SAST Vulnerability: Command Injection
+app.get('/ping', (req, res) => {
+  const host = req.query.host;
+  // Snyk Code flags unsanitized user input passed directly into exec()
+  exec(`ping -c 1 ${host}`, (err, stdout) => {
+    res.send(stdout);
+  });
+});
+
+// Alternative High Severity: Dynamic Code Execution
+app.post('/calculate', (req, res) => {
+  const userInput = req.query.formula;
+  // Snyk Code flags eval() with untrusted inputs
+  const result = eval(userInput);
+  res.send({ result });
 });
 
 app.listen(port, () => {

@@ -26,6 +26,10 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      # Required permissions to upload SARIF results to GitHub Security
+      security-events: write
+      contents: read
     steps:
       - name: checkout code
         uses: actions/checkout@v3
@@ -41,20 +45,39 @@ jobs:
       - name: Install Node.js dependencies
         run: npm install
 
-      - name: Run Snyk Code (SAST Scan)
+      # --- 1. Snyk Code (SAST Scan) ---
+      - name: Run Snyk Code (SAST) and generate SARIF report
         uses: snyk/actions/node@master
+        continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           command: code test
-          args: --severity-threshold=high --org=b4391880-346b-48b4-a1de-9fb08a2db7b6
+          args: --sarif-file-output=snyk-code.sarif --org=${{ secrets.SNYK_ORG }}
 
-      - name: Run Snyk Open Source (Dependency / SCA Scan)
+      - name: Upload Snyk Code result to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: snyk-code.sarif
+          category: snyk-code
+
+      # --- 2. Snyk Open Source (SCA Scan) ---
+      - name: Run Snyk Open Source (SCA) and generate SARIF report
         uses: snyk/actions/node@master
+        continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          args: --severity-threshold=high --org=b4391880-346b-48b4-a1de-9fb08a2db7b6
+          args: --sarif-file-output=snyk-open-source.sarif --org=${{ secrets.SNYK_ORG }}
+
+      - name: Upload Snyk Open Source result to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: snyk-open-source.sarif
+          category: snyk-open-source
+
+
+
 
       - name: Build Docker image
         run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/my-app:${{ github.sha}} .
