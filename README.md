@@ -284,11 +284,23 @@ You can either create the app from the UI or using the CLI.
 Example CLI pattern:
 
 ```bash
-argocd app create my-app \
-  --repo https://github.com/<your-user>/<your-repo>.git \
-  --path . \
-  --dest-server https://kubernetes.default.svc \
-  --dest-namespace argocd
+# Login to Argocd server
+argocd login localhost:8080 --name local
+
+# Adding repository
+argocd repo add https://github.com/ashif8984/argocd-node-application.git
+
+# Create an app
+argocd app create  argocd-node-app \
+    --repo https://github.com/ashif8984/argocd-node-application.git \
+    --path manifest \
+    --dest-server https://kubernetes.default.svc \
+    --dest-namespace default \
+    --revision main \
+    --sync-policy automated \
+    --dest-namespace argocd \
+    --auto-prune \
+    --self-heal
 ```
 
 If using the UI, create a new app and point it to the GitHub repository and the target cluster/namespace.
