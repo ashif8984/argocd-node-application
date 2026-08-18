@@ -47,14 +47,14 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           command: code test
-          args: --severity-threshold=high
+          args: --severity-threshold=high --org=b4391880-346b-48b4-a1de-9fb08a2db7b6
 
       - name: Run Snyk Open Source (Dependency / SCA Scan)
         uses: snyk/actions/node@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          args: --severity-threshold=high
+          args: --severity-threshold=high --org=b4391880-346b-48b4-a1de-9fb08a2db7b6
 
       - name: Build Docker image
         run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/my-app:${{ github.sha}} .
