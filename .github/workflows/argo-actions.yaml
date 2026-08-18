@@ -41,6 +41,21 @@ jobs:
       - name: Install Node.js dependencies
         run: npm install
 
+      - name: Run Snyk Code (SAST Scan)
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: code test
+          args: --severity-threshold=high
+
+      - name: Run Snyk Open Source (Dependency / SCA Scan)
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
+
       - name: Build Docker image
         run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/my-app:${{ github.sha}} .
 
