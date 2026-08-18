@@ -48,7 +48,7 @@ jobs:
       # --- 1. Snyk Code (SAST Scan) ---
       - name: Run Snyk Code (SAST) and generate SARIF report
         uses: snyk/actions/node@master
-        continue-on-error: true
+        continue-on-error: false
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
@@ -64,7 +64,7 @@ jobs:
       # --- 2. Snyk Open Source (SCA Scan) ---
       - name: Run Snyk Open Source (SCA) and generate SARIF report
         uses: snyk/actions/node@master
-        continue-on-error: true
+        continue-on-error: false
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
@@ -75,8 +75,6 @@ jobs:
         with:
           sarif_file: snyk-open-source.sarif
           category: snyk-open-source
-
-
 
 
       - name: Build Docker image
